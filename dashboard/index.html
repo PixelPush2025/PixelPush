@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Pixel Push | Money Dashboard</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <span class="logo">PP</span>
+      <div>
+        <h1>Pixel Push</h1>
+        <p>Subscriptions, payments &amp; profit</p>
+      </div>
+    </div>
+    <nav class="tabs" id="tabs">
+      <button data-view="overview" class="active">Overview</button>
+      <button data-view="expenses">Subscriptions</button>
+      <button data-view="income">Clients</button>
+      <button data-view="payments">Payments</button>
+      <button data-view="settings">Settings</button>
+    </nav>
+  </header>
+
+  <main>
+    <!-- OVERVIEW -->
+    <section id="view-overview" class="view active">
+      <div class="kpis" id="kpis"></div>
+
+      <div class="grid-2">
+        <div class="card">
+          <div class="card-head">
+            <h2>Last 12 months</h2>
+            <div class="legend">
+              <span><i class="dot income"></i>Received</span>
+              <span><i class="dot expense"></i>Paid out</span>
+              <span><i class="dot profit"></i>Profit</span>
+            </div>
+          </div>
+          <div id="chart" class="chart"></div>
+        </div>
+
+        <div class="card">
+          <div class="card-head">
+            <h2>Due in the next 30 days</h2>
+          </div>
+          <ul id="upcoming" class="upcoming"></ul>
+        </div>
+      </div>
+
+      <div class="grid-2">
+        <div class="card">
+          <div class="card-head"><h2>Spend by category (monthly)</h2></div>
+          <div id="by-category"></div>
+        </div>
+        <div class="card">
+          <div class="card-head"><h2>Revenue by client (monthly)</h2></div>
+          <div id="by-client"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- SUBSCRIPTIONS (EXPENSES) -->
+    <section id="view-expenses" class="view">
+      <div class="toolbar">
+        <div>
+          <h2>Platform subscriptions</h2>
+          <p class="muted">Tools and services you pay for, such as Canva, Adobe, Meta ads and hosting.</p>
+        </div>
+        <button class="btn primary" data-add="expense">+ Add subscription</button>
+      </div>
+      <div class="card table-wrap"><table id="table-expense"></table></div>
+    </section>
+
+    <!-- CLIENTS (INCOME) -->
+    <section id="view-income" class="view">
+      <div class="toolbar">
+        <div>
+          <h2>Client retainers</h2>
+          <p class="muted">Recurring income from clients.</p>
+        </div>
+        <button class="btn primary" data-add="income">+ Add client</button>
+      </div>
+      <div class="card table-wrap"><table id="table-income"></table></div>
+    </section>
+
+    <!-- PAYMENTS -->
+    <section id="view-payments" class="view">
+      <div class="toolbar">
+        <div>
+          <h2>Payment history</h2>
+          <p class="muted">Every payment in and out. Marking a subscription or client as paid adds an entry here automatically.</p>
+        </div>
+        <button class="btn primary" id="add-payment">+ Log payment</button>
+      </div>
+      <div class="filters">
+        <select id="f-type">
+          <option value="">All types</option>
+          <option value="income">Income</option>
+          <option value="expense">Expense</option>
+        </select>
+        <input type="month" id="f-month" />
+        <input type="search" id="f-search" placeholder="Search…" />
+        <span class="spacer"></span>
+        <span id="f-summary" class="muted"></span>
+      </div>
+      <div class="card table-wrap"><table id="table-payments"></table></div>
+    </section>
+
+    <!-- SETTINGS -->
+    <section id="view-settings" class="view">
+      <div class="card settings">
+        <h2>Settings</h2>
+        <label>Currency
+          <select id="s-currency">
+            <option value="INR">₹ INR</option>
+            <option value="USD">$ USD</option>
+            <option value="EUR">€ EUR</option>
+            <option value="GBP">£ GBP</option>
+            <option value="AED">AED</option>
+          </select>
+        </label>
+        <h3>Your data</h3>
+        <p class="muted">Data is saved in this browser only. Export a backup regularly, or use it to move data to another device.</p>
+        <div class="row">
+          <button class="btn" id="export-json">Export backup (.json)</button>
+          <label class="btn">Import backup<input type="file" id="import-json" accept="application/json" hidden /></label>
+          <button class="btn" id="export-csv">Export payments (.csv)</button>
+        </div>
+        <div class="row">
+          <button class="btn" id="load-sample">Load sample data</button>
+          <button class="btn danger" id="clear-all">Delete all data</button>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- Recurring item modal -->
+  <dialog id="item-dialog">
+    <form id="item-form" method="dialog">
+      <h2 id="item-title">Add</h2>
+      <input type="hidden" name="id" />
+      <input type="hidden" name="type" />
+      <label><span id="name-label">Name</span><input name="name" required /></label>
+      <label><span id="cat-label">Category</span><input name="category" list="category-list" /></label>
+      <datalist id="category-list"></datalist>
+      <div class="row">
+        <label>Amount<input name="amount" type="number" step="0.01" min="0" required /></label>
+        <label>Billing cycle
+          <select name="cycle">
+            <option value="monthly">Monthly</option>
+            <option value="quarterly">Quarterly</option>
+            <option value="yearly">Yearly</option>
+            <option value="weekly">Weekly</option>
+          </select>
+        </label>
+      </div>
+      <div class="row">
+        <label>Next due date<input name="nextDate" type="date" required /></label>
+        <label>Status
+          <select name="status">
+            <option value="active">Active</option>
+            <option value="paused">Paused</option>
+            <option value="cancelled">Cancelled</option>
+          </select>
+        </label>
+      </div>
+      <label>Payment method / account<input name="method" placeholder="e.g. HDFC card, UPI, PayPal" /></label>
+      <label>Notes<textarea name="notes" rows="2"></textarea></label>
+      <div class="dialog-actions">
+        <button type="button" class="btn" data-close>Cancel</button>
+        <button type="submit" class="btn primary">Save</button>
+      </div>
+    </form>
+  </dialog>
+
+  <!-- Payment modal -->
+  <dialog id="payment-dialog">
+    <form id="payment-form" method="dialog">
+      <h2 id="payment-title">Log payment</h2>
+      <input type="hidden" name="id" />
+      <div class="row">
+        <label>Type
+          <select name="type">
+            <option value="income">Income (money in)</option>
+            <option value="expense">Expense (money out)</option>
+          </select>
+        </label>
+        <label>Date<input name="date" type="date" required /></label>
+      </div>
+      <label>Description<input name="description" required placeholder="e.g. One-off logo project" /></label>
+      <div class="row">
+        <label>Amount<input name="amount" type="number" step="0.01" min="0" required /></label>
+        <label>Category<input name="category" list="category-list" /></label>
+      </div>
+      <label>Status
+        <select name="status">
+          <option value="paid">Paid / received</option>
+          <option value="pending">Pending</option>
+        </select>
+      </label>
+      <div class="dialog-actions">
+        <button type="button" class="btn" data-close>Cancel</button>
+        <button type="submit" class="btn primary">Save</button>
+      </div>
+    </form>
+  </dialog>
+
+  <div id="toast" class="toast"></div>
+
+  <script src="app.js"></script>
+</body>
+</html>
